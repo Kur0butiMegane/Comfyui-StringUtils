@@ -42,7 +42,6 @@ class StringSplitter:
 
     RETURN_TYPES = ("STRING","INT",)
     RETURN_NAMES = ("STRING","Count",)
-    OUTPUT_IS_LIST = (False,False,)
 
     FUNCTION = "execute"
     CATEGORY = "StringUtils"
@@ -84,12 +83,41 @@ class StringSelector:
         return (selected, )
 
 
+class ExtractMarkupValue:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+            "xml_string": ("STRING", {"default": "", "multiline": True,}),
+            "tag_string": ("STRING", {"default": "", "multiline": False,}),
+        }}
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "execute"
+
+    CATEGORY = "StringUtils"
+
+    def execute(self, xml_string, tag_string):
+        pattern = "<" + tag_string + ">(.*?)</" + tag_string + ">"
+        matches = re.findall(pattern, xml_string)
+
+        result_string = ""
+        for m in matches:
+            trimed = re.sub("(^ +| +$)", "", m, flags=re.MULTILINE)
+            trimed = re.sub("(,$)", "", trimed, flags=re.MULTILINE)
+            result_string += trimed + ", "
+        result_string = re.sub("(^ +| +$)", "", result_string, flags=re.MULTILINE)
+        result_string = re.sub("(,$)", "", result_string, flags=re.MULTILINE)
+
+        return (result_string,)
+
+
 # A dictionary that contains all nodes you want to export with their names
 # NOTE: names should be globally unique
 NODE_CLASS_MAPPINGS = {
     "PromptNormalizer": PromptNormalizer,
     "StringSplitter": StringSplitter,
     "StringSelector": StringSelector,
+    "ExtractMarkupValue": ExtractMarkupValue,
 }
 
 
@@ -97,5 +125,6 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptNormalizer": "Prompt Normalizer",
     "StringSplitter": "String Splitter",
-    "StringSelector": "String Line Selector"
+    "StringSelector": "String Line Selector",
+    "ExtractMarkupValue": "Extract Markup Value",
 }
