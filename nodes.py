@@ -97,8 +97,9 @@ class ExtractMarkupValue:
     CATEGORY = "StringUtils"
 
     def execute(self, xml_string, tag_string):
-        pattern = "<" + tag_string + ">(.*?)</" + tag_string + ">"
-        matches = re.findall(pattern, xml_string)
+        pattern = r"<" + tag_string + r">(.*?)</" + tag_string + r">"
+        line = re.sub("(\r\n|\n|\r)", " ", xml_string, flags=re.MULTILINE)
+        matches = re.findall(pattern, line)
 
         result_string = ""
         for m in matches:
