@@ -13,11 +13,10 @@ class PromptNormalizer:
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("STRING",)
-
     FUNCTION = "execute"
     CATEGORY = "StringUtils"
 
-    def execute(self, string, remove_comma):
+    def normalize(string, remove_comma):
         result = re.sub("(//.*|#.*)", "", string, flags=re.MULTILINE)
         result = re.sub("(\r\n|\n|\r)", " ", result, flags=re.MULTILINE)
         result = re.sub("/\*.*?\*/", "", result, flags=re.MULTILINE)
@@ -26,7 +25,10 @@ class PromptNormalizer:
         result = re.sub("(,$)", "", result, flags=re.MULTILINE)
         if remove_comma:
             result = re.sub("(,)", "", result, flags=re.MULTILINE)
-        return (result,)
+        return result
+
+    def execute(self, string, remove_comma):
+        return (PromptNormalizer.normalize(string, remove_comma),)
 
 
 class StringSplitter:
@@ -42,7 +44,6 @@ class StringSplitter:
 
     RETURN_TYPES = ("STRING","INT",)
     RETURN_NAMES = ("STRING","Count",)
-
     FUNCTION = "execute"
     CATEGORY = "StringUtils"
 
@@ -68,7 +69,6 @@ class StringSelector:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "execute"
-
     CATEGORY = "StringUtils"
 
     def execute(self, string, line_num):
@@ -89,17 +89,17 @@ class ExtractMarkupValue:
         return {"required": {
             "xml_string": ("STRING", {"default": "", "multiline": True,}),
             "tag_string": ("STRING", {"default": "", "multiline": False,}),
+            "remove_comma": ("BOOLEAN", {"default": False,}),
         }}
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "execute"
-
     CATEGORY = "StringUtils"
 
-    def execute(self, xml_string, tag_string):
-        pattern = r"<" + tag_string + r">(.*?)</" + tag_string + r">"
-        line = re.sub("(\r\n|\n|\r)", " ", xml_string, flags=re.MULTILINE)
-        matches = re.findall(pattern, line)
+    def execute(self, xml_string, tag_string, remove_comma):
+        pattern    = r"<" + tag_string + r">(.*?)</" + tag_string + r">"
+        normalized = PromptNormalizer.normalize(xml_string, remove_comma)
+        matches    = re.findall(pattern, normalized)
 
         result_string = ""
         for m in matches:
